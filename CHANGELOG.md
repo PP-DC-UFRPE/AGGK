@@ -1,4 +1,4 @@
-# Revision history for banco-investimentos-haskell
+# Revision history for AGGK
 
 ## 0.1.0.0 -- YYYY-mm-dd
 

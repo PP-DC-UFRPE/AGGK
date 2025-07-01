@@ -1,12 +1,14 @@
 module Logica where
 
 import Tipos
+import SimuladorPrecos
 import Data.Maybe (isJust, fromJust, fromMaybe)
 import Data.List (find, sortOn)
-import Data.Time (UTCTime)
+import Data.Time (UTCTime, getCurrentTime)
 import Data.Time.Format (formatTime, defaultTimeLocale)
 import Data.Time.LocalTime (TimeZone, utcToZonedTime)
 import Data.Ord (Down(..))
+import qualified Data.Map as Map
 
 -- Lista de todos os ativos disponíveis para negociação em nosso banco
 ativosDisponiveis :: [Ativo]
@@ -22,8 +24,26 @@ precosDeMercado :: [(CodigoAtivo, Double)]
 precosDeMercado = [("PETR4", 15.75), ("VALE3", 45.50), ("MGLU3", 2.50), ("ITUB4", 30.10)]
 
 -- Função para buscar o preço atual de um ativo
-obterPreco :: CodigoAtivo -> Maybe Double
-obterPreco codigo = lookup codigo precosDeMercado
+obterPreco :: CodigoAtivo -> EstadoBanco -> Maybe Double
+obterPreco codigo estado = 
+    case simuladorPrecos estado of
+        Nothing -> lookup codigo precosDeMercado  -- Fallback para preços fixos
+        Just simSerial -> 
+            let sim = deSerializavel simSerial
+            in obterPrecoAtualizado codigo sim
+
+-- Função para atualizar preços no estado do banco
+atualizarPrecosNoBanco :: UTCTime -> EstadoBanco -> EstadoBanco
+atualizarPrecosNoBanco tempoAtual estado =
+    case simuladorPrecos estado of
+        Nothing -> 
+            -- Inicializa o simulador se não existir
+            let novoSim = inicializarSimulador tempoAtual
+            in estado { simuladorPrecos = Just (paraSerializavel novoSim) }
+        Just simSerial -> 
+            let sim = deSerializavel simSerial
+                simAtualizado = atualizarPrecos tempoAtual sim
+            in estado { simuladorPrecos = Just (paraSerializavel simAtualizado) }
 
 -- Função para buscar os dados completos de um ativo pelo seu código
 buscarAtivoDoMercado :: CodigoAtivo -> [Ativo] -> Maybe Ativo
@@ -78,46 +98,51 @@ abrirContaInvestimento nome senhaLogin pergunta resposta depositoInicial estadoA
 -- Processa uma ordem de compra de ativo
 executarOrdemDeCompra :: IdCliente -> CodigoAtivo -> Int -> UTCTime -> EstadoBanco -> (EstadoBanco, String)
 executarOrdemDeCompra cid ticker qtd agora estado =
-  case buscarAtivoDoMercado ticker (ativosDoMercado estado) of
-    Nothing -> (estado, "ERRO: Ativo '" ++ ticker ++ "' não é negociado por nosso banco.")
+  -- Primeiro atualiza os preços
+  let estadoAtualizado = atualizarPrecosNoBanco agora estado
+  in case buscarAtivoDoMercado ticker (ativosDoMercado estadoAtualizado) of
+    Nothing -> (estadoAtualizado, "ERRO: Ativo '" ++ ticker ++ "' não é negociado por nosso banco.")
     Just ativoParaComprar ->
-      case obterPreco ticker of
-        Nothing -> (estado, "ERRO: Preço para o ativo não encontrado (Erro interno).")
+      case obterPreco ticker estadoAtualizado of
+        Nothing -> (estadoAtualizado, "ERRO: Preço para o ativo não encontrado (Erro interno).")
         Just preco ->
-          case buscarContaPorID cid (contas estado) of
-            Nothing -> (estado, "ERRO: Conta do cliente não encontrada.")
+          case buscarContaPorID cid (contas estadoAtualizado) of
+            Nothing -> (estadoAtualizado, "ERRO: Conta do cliente não encontrada.")
             Just conta ->
               let custoTotal = preco * fromIntegral qtd
               in if saldo conta < custoTotal
-                 then (estado, "ERRO: Saldo insuficiente para realizar a compra.")
+                 then (estadoAtualizado, "ERRO: Saldo insuficiente para realizar a compra.")
                  else
                    let
-                       contasAtualizadas = map (\c -> if idClienteConta c == cid then c { saldo = saldo c - custoTotal } else c) (contas estado)
-                       carteirasAtualizadas = map (\c -> if idClienteCarteira c == cid then adicionarAtivoNaCarteira ativoParaComprar qtd c else c) (carteiras estado)
+                       contasAtualizadas = map (\c -> if idClienteConta c == cid then c { saldo = saldo c - custoTotal } else c) (contas estadoAtualizado)
+                       carteirasAtualizadas = map (\c -> if idClienteCarteira c == cid then adicionarAtivoNaCarteira ativoParaComprar qtd c else c) (carteiras estadoAtualizado)
                        novaTransacao = RegistroTransacao cid Compra ticker qtd preco agora
-                       historicoAtualizado = novaTransacao : historico estado
-                       novoEstado = estado { contas = contasAtualizadas, carteiras = carteirasAtualizadas, historico = historicoAtualizado }
-                   in (novoEstado, ">> Compra de " ++ show qtd ++ " " ++ ticker ++ " realizada com sucesso!")
+                       historicoAtualizado = novaTransacao : historico estadoAtualizado
+                       novoEstado = estadoAtualizado { contas = contasAtualizadas, carteiras = carteirasAtualizadas, historico = historicoAtualizado }
+                   in (novoEstado, ">> Compra de " ++ show qtd ++ " " ++ ticker ++ " realizada com sucesso por R$ " ++ show preco ++ " cada!")
 
 -- Processa uma ordem de venda de ativo
 executarOrdemDeVenda :: IdCliente -> CodigoAtivo -> Int -> UTCTime -> EstadoBanco -> (EstadoBanco, String)
 executarOrdemDeVenda cid ticker qtd agora estado =
-  case obterPreco ticker of
-    Nothing -> (estado, "ERRO: Ativo '" ++ ticker ++ "' não encontrado no mercado.")
+  -- Primeiro atualiza os preços
+  let estadoAtualizado = atualizarPrecosNoBanco agora estado
+  in case obterPreco ticker estadoAtualizado of
+    Nothing -> (estadoAtualizado, "ERRO: Ativo '" ++ ticker ++ "' não encontrado no mercado.")
     Just preco ->
-      case buscarCarteiraPorID cid (carteiras estado) of
-        Nothing -> (estado, "ERRO: Carteira do cliente não encontrada.")
+      case buscarCarteiraPorID cid (carteiras estadoAtualizado) of
+        Nothing -> (estadoAtualizado, "ERRO: Carteira do cliente não encontrada.")
         Just carteira ->
           case verificarPosseAtivo ticker qtd carteira of
-            False -> (estado, "ERRO: Você não possui a quantidade suficiente de '" ++ ticker ++ "' para vender.")
+            False -> (estadoAtualizado, "ERRO: Você não possui a quantidade suficiente de '" ++ ticker ++ "' para vender.")
             True ->
               let valorVenda = preco * fromIntegral qtd
-                  contasAtualizadas = map (\c -> if idClienteConta c == cid then c { saldo = saldo c + valorVenda } else c) (contas estado)
-                  carteirasAtualizadas = map (\c -> if idClienteCarteira c == cid then removerAtivoDaCarteira ticker qtd c else c) (carteiras estado)
+                  contasAtualizadas = map (\c -> if idClienteConta c == cid then c { saldo = saldo c + valorVenda } else c) (contas estadoAtualizado)
+                  carteirasAtualizadas = map (\c -> if idClienteCarteira c == cid then removerAtivoDaCarteira ticker qtd c else c) (carteiras estadoAtualizado)
                   novaTransacao = RegistroTransacao cid Venda ticker qtd preco agora
-                  historicoAtualizado = novaTransacao : historico estado
-                  novoEstado = estado { contas = contasAtualizadas, carteiras = carteirasAtualizadas, historico = historicoAtualizado }
-              in (novoEstado, ">> Venda de " ++ show qtd ++ " " ++ ticker ++ " realizada com sucesso!")
+                  historicoAtualizado = novaTransacao : historico estadoAtualizado
+                  novoEstado = estadoAtualizado { contas = contasAtualizadas, carteiras = carteirasAtualizadas, historico = historicoAtualizado }
+              in (novoEstado, ">> Venda de " ++ show qtd ++ " " ++ ticker ++ " realizada com sucesso por R$ " ++ show preco ++ " cada!")
+
 
 -- Retorna uma string formatada com a posição da carteira do cliente
 consultarPosicao :: IdCliente -> EstadoBanco -> String
@@ -147,7 +172,7 @@ consultarMercado estado =
           let tickerAtivo = codigo atv
               nomeCompleto = nomeAtivo atv
               preco :: Double
-              preco = fromMaybe 0.0 (obterPreco tickerAtivo)
+              preco = fromMaybe 0.0 (obterPreco tickerAtivo estado)
           in tickerAtivo ++ " (" ++ nomeCompleto ++ "): R$ " ++ show preco
 
 -- Retorna uma string formatada com o extrato de transações de um cliente

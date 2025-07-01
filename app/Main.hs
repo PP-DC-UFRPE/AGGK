@@ -2,10 +2,10 @@ module Main where
 
 import Tipos
 import Logica
+import SimuladorPrecos
 import System.IO
 import qualified Data.ByteString.Lazy as B
 import Data.Aeson
-import Data.Maybe (fromMaybe)
 import Control.Exception (catch, IOException)
 import Data.Time (getCurrentTime)
 import Data.Time.LocalTime (getCurrentTimeZone)
@@ -21,15 +21,23 @@ salvarEstado estado = B.writeFile arquivoBanco (encode estado)
 carregarEstado :: IO EstadoBanco
 carregarEstado = do
     conteudo <- B.readFile arquivoBanco `catch` tratarErroLeitura
+    tempoAtual <- getCurrentTime
     let estadoInicial = EstadoBanco {
                           clientes = [],
                           contas = [],
                           carteiras = [],
                           historico = [],
                           proximoIDCliente = 1,
-                          ativosDoMercado = ativosDisponiveis
+                          ativosDoMercado = ativosDisponiveis,
+                          simuladorPrecos = Just (paraSerializavel $ inicializarSimulador tempoAtual)
                         }
-    return $ fromMaybe estadoInicial (decode conteudo)
+    case decode conteudo of
+        Nothing -> return estadoInicial
+        Just estadoCarregado -> 
+            -- Se o estado carregado não tem simulador, inicializa um
+            case simuladorPrecos estadoCarregado of
+                Nothing -> return $ estadoCarregado { simuladorPrecos = Just (paraSerializavel $ inicializarSimulador tempoAtual) }
+                Just _ -> return estadoCarregado
   where
     tratarErroLeitura :: IOException -> IO B.ByteString
     tratarErroLeitura _ = do
@@ -114,7 +122,9 @@ menuLogado clienteLogado estado = do
     putStrLn "3. Vender Ativo"
     putStrLn "4. Ver Posição da Carteira"
     putStrLn "5. Ver Extrato de Transações"
-    putStrLn "6. Logout (Sair da conta)"
+    putStrLn "6. Atualizar Preços Manualmente"
+    putStrLn "7. Simular Choque de Mercado"
+    putStrLn "8. Logout (Sair da conta)"
     putStr "Escolha uma opção: "
     hFlush stdout
 
@@ -122,8 +132,11 @@ menuLogado clienteLogado estado = do
     case opcao of
         "1" -> do
             putStrLn ""
-            putStrLn $ consultarMercado estado
-            menuLogado clienteLogado estado
+            agora <- getCurrentTime
+            let estadoAtualizado = atualizarPrecosNoBanco agora estado
+            putStrLn $ consultarMercado estadoAtualizado
+            salvarEstado estadoAtualizado
+            menuLogado clienteLogado estadoAtualizado
 
         "2" -> do
             putStr "Digite o código do ativo (ex: PETR4): "
@@ -165,6 +178,34 @@ menuLogado clienteLogado estado = do
             menuLogado clienteLogado estado
 
         "6" -> do
+            putStrLn ">> Atualizando preços..."
+            agora <- getCurrentTime
+            let estadoAtualizado = atualizarPrecosNoBanco agora estado
+            putStrLn ">> Preços atualizados!"
+            putStrLn $ consultarMercado estadoAtualizado
+            salvarEstado estadoAtualizado
+            menuLogado clienteLogado estadoAtualizado
+
+        "7" -> do
+            putStr "Digite a intensidade do choque (0.1 = 10%, 0.5 = 50%): "
+            hFlush stdout
+            intensidadeStr <- getLine
+            let intensidade = read intensidadeStr :: Double
+            agora <- getCurrentTime
+            case simuladorPrecos estado of
+                Nothing -> do
+                    putStrLn "Simulador não inicializado!"
+                    menuLogado clienteLogado estado
+                Just simSerial -> do
+                    let sim = deSerializavel simSerial
+                        simComChoque = aplicarChoqueMercado intensidade agora sim
+                        estadoAtualizado = estado { simuladorPrecos = Just (paraSerializavel simComChoque) }
+                    putStrLn ">> Choque de mercado aplicado!"
+                    putStrLn $ consultarMercado estadoAtualizado
+                    salvarEstado estadoAtualizado
+                    menuLogado clienteLogado estadoAtualizado
+
+        "8" -> do
             putStrLn "\n>> Fazendo logout..."
             inicio estado
 

@@ -5,6 +5,8 @@ module Tipos where
 import GHC.Generics (Generic)
 import Data.Aeson (ToJSON, FromJSON)
 import Data.Time (UTCTime)
+import qualified Data.Map as Map
+import Data.Map (Map)
 
 -- Tipos básicos
 type IdCliente = Int
@@ -56,6 +58,18 @@ data RegistroTransacao = RegistroTransacao {
     timestamp :: UTCTime
 } deriving (Show, Generic)
 
+-- Dados de um ativo com informações para simulação
+data AtivoComInstabilidade = AtivoComInstabilidade {
+    ativoBase :: Ativo,
+    precoAtual :: Double,
+    ultimaAtualizacao :: UTCTime
+} deriving (Show, Generic)
+
+-- Estado do simulador de preços (sem StdGen para serialização)
+data EstadoSimuladorSerializavel = EstadoSimuladorSerializavel {
+    ativosComPrecosSerial :: Map CodigoAtivo AtivoComInstabilidade
+} deriving (Show, Generic)
+
 -- Estado geral do sistema bancário
 data EstadoBanco = EstadoBanco {
     clientes :: [Cliente],
@@ -63,7 +77,8 @@ data EstadoBanco = EstadoBanco {
     carteiras :: [Carteira],
     historico :: [RegistroTransacao],
     proximoIDCliente :: IdCliente,
-    ativosDoMercado :: [Ativo]
+    ativosDoMercado :: [Ativo],
+    simuladorPrecos :: Maybe EstadoSimuladorSerializavel
 } deriving (Show, Generic)
 
 -- Instâncias JSON para leitura/gravação em arquivo
@@ -81,5 +96,9 @@ instance ToJSON TipoTransacao
 instance FromJSON TipoTransacao
 instance ToJSON RegistroTransacao
 instance FromJSON RegistroTransacao
+instance ToJSON AtivoComInstabilidade
+instance FromJSON AtivoComInstabilidade
+instance ToJSON EstadoSimuladorSerializavel
+instance FromJSON EstadoSimuladorSerializavel
 instance ToJSON EstadoBanco
 instance FromJSON EstadoBanco
