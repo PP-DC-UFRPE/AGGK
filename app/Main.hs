@@ -9,6 +9,7 @@ import Data.Aeson
 import Control.Exception (catch, IOException)
 import Data.Time (getCurrentTime)
 import Data.Time.LocalTime (getCurrentTimeZone)
+import Text.Read (readMaybe)
 
 arquivoBanco :: FilePath
 arquivoBanco = "banco_dados.json"
@@ -73,18 +74,27 @@ fazerLogin estado = do
     putStr "Digite seu ID de Cliente: "
     hFlush stdout
     idStr <- getLine
-    putStr "Digite sua senha: "
-    hFlush stdout
-    senha <- getLine
-    let cid = read idStr :: IdCliente
 
-    case loginCliente cid senha estado of
+    -- readMaybe é uma versão do read que retorna Nothing caso a conversão falhe.
+    case readMaybe idStr :: Maybe IdCliente of 
         Nothing -> do
-            putStrLn "\n>> ID ou senha inválidos. Tente novamente."
+            putStrLn "\n Falha ao logar: o ID do Cliente tem que ser um número"
             inicio estado
-        Just clienteLogado -> do
-            putStrLn $ "\n>> Bem-vindo(a), " ++ nomeCliente clienteLogado ++ "!"
-            menuLogado clienteLogado estado
+        Just cid -> do
+            putStr "Digite sua senha: "
+            hFlush stdout
+            senha <- getLine
+
+            case loginCliente cid senha estado of
+                Nothing -> do
+                    putStr "\n ID ou senha incorreto."
+                    inicio estado
+                Just clienteLogado -> do
+                    putStrLn  $ "Bem-vindo(a), " ++ nomeCliente clienteLogado ++ "!" -- $ subistitui os ()
+
+
+
+
 
 -- Processo de Recuperação de Senha
 recuperarSenha :: EstadoBanco -> IO ()
