@@ -12,7 +12,7 @@
 
 ## Descrição
 
-Este projeto é uma simulação da plataforma de investimentos de um banco digital, desenvolvida inteiramente em Haskell. O objetivo é aplicar conceitos de programação funcional para criar um sistema robusto que gerencia clientes, contas de investimento, negociação de ativos financeiros e histórico de transações. O programa oferece uma interface de linha de comando (CLI) para interação do usuário e persiste os dados em um arquivo local para manter o estado do sistema entre as execuções.
+Este projeto é uma simulação da plataforma de investimentos de um banco digital, desenvolvida em Haskell. O objetivo é criar um sistema que gerencia clientes, contas de investimento, negociação de ativos financeiros e histórico de transações. O programa oferece uma interface de linha de comando (CLI) para interação do usuário e persiste os dados em um arquivo local JSON para manter o estado do sistema entre as execuções.
 
 
 ## Funcionalidades e Regras de Negócio
@@ -23,7 +23,7 @@ O sistema implementa as seguintes funcionalidades, simulando as operações de u
 
 * **Abertura de Conta de Investimentos:**
     * **Regra:** Ao cadastrar um novo cliente, uma conta de investimentos associada a ele é criada automaticamente.
-    * **Regra:** A conta é iniciada com um depósito inicial em dinheiro (saldo/cash).
+    * **Regra:** A conta é iniciada com um depósito inicial em dinheiro.
     * **Regra:** Cada cliente possui um ID único para identificação no banco.
 
 * **Ordem de Compra de Ativo (Buy):**
