@@ -12,10 +12,10 @@ import Data.Map (Map)
 
 -- Constantes de instabilidade
 instabilidadePETR4, instabilidadeVALE3, instabilidadeMGLU3, instabilidadeITUB4 :: Double
-instabilidadePETR4 = 100   -- Petrobras - instabilidade moderada (30%)
-instabilidadeVALE3 = 20   -- Vale - instabilidade baixa (20%)
-instabilidadeMGLU3 = 200   -- Magazine Luiza - instabilidade alta (80%)
-instabilidadeITUB4 = 15  -- Itaú - instabilidade muito baixa (15%)
+instabilidadePETR4 = 100   -- Petrobras - instabilidade moderada
+instabilidadeVALE3 = 20   -- Vale - instabilidade baixa
+instabilidadeMGLU3 = 200   -- Magazine Luiza - instabilidade alta
+instabilidadeITUB4 = 15  -- Itaú - instabilidade muito baixa
 
 -- Função para obter instabilidade baseada no código do ativo
 obterInstabilidade :: CodigoAtivo -> Double
@@ -61,14 +61,14 @@ atualizarPrecos tempoAtual estado =
 -- Atualiza o preço de um ativo específico (usando instabilidade das constantes)
 atualizarPrecoAtivo :: UTCTime -> AtivoComInstabilidade -> AtivoComInstabilidade
 atualizarPrecoAtivo tempoAtual ativoInfo =
-    let codigoAtivo = codigo $ ativoBase ativoInfo
+    let codigoAtivo = codigo  (ativoBase ativoInfo)
         instabilidadeAtivo = obterInstabilidade codigoAtivo
-        tempoDecorrido = realToFrac $ diffUTCTime tempoAtual (ultimaAtualizacao ativoInfo)
+        tempoDecorrido = realToFrac (diffUTCTime tempoAtual (ultimaAtualizacao ativoInfo))
         -- Converte segundos para horas
         horasDecorridas = tempoDecorrido / 3600.0
         -- Fator de variação baseado no tempo e instabilidade
         fatorVariacao = min 0.5 (horasDecorridas * instabilidadeAtivo * 0.1)
-        -- Gera variação aleatória (simplificada usando hash do código)
+        -- Gera variação aleatória
         semente = hashCodigo codigoAtivo (round tempoDecorrido)
         gerador = mkStdGen semente
         (variacaoAleatoria, _) = randomR (-fatorVariacao, fatorVariacao) gerador
@@ -100,13 +100,6 @@ forcarAtualizacaoAtivo codigo tempoAtual estado =
                 ativosAtualizados = Map.insert codigo ativoAtualizado (ativosComPrecos estado)
             in estado { ativosComPrecos = ativosAtualizados }
 
--- Adiciona um novo ativo ao simulador (sem especificar instabilidade)
-adicionarAtivoAoSimulador :: Ativo -> Double -> UTCTime -> EstadoSimulador -> EstadoSimulador
-adicionarAtivoAoSimulador ativo preco tempo estado =
-    let novoAtivoInfo = AtivoComInstabilidade ativo preco tempo
-        ativosAtualizados = Map.insert (codigo ativo) novoAtivoInfo (ativosComPrecos estado)
-    in estado { ativosComPrecos = ativosAtualizados }
-
 -- Retorna informações detalhadas de um ativo (com instabilidade calculada)
 obterInfoAtivoCompleta :: CodigoAtivo -> EstadoSimulador -> Maybe (AtivoComInstabilidade, Double)
 obterInfoAtivoCompleta codigo estado = 
@@ -123,22 +116,3 @@ gerarNovoSeed :: StdGen -> Int -> StdGen
 gerarNovoSeed gen n = 
     let (novaSemente, _) = randomR (1, 1000000) gen
     in mkStdGen (novaSemente + n)
-
--- Simula volatilidade extrema (para eventos especiais)
-aplicarChoqueMercado :: Double -> UTCTime -> EstadoSimulador -> EstadoSimulador
-aplicarChoqueMercado intensidade tempoAtual estado =
-    let ativosComChoque = Map.map (aplicarChoqueAtivo intensidade tempoAtual) (ativosComPrecos estado)
-    in estado { ativosComPrecos = ativosComChoque }
-
--- Aplica choque de mercado a um ativo específico
-aplicarChoqueAtivo :: Double -> UTCTime -> AtivoComInstabilidade -> AtivoComInstabilidade
-aplicarChoqueAtivo intensidade tempoAtual ativoInfo =
-    let codigoAtivo = codigo $ ativoBase ativoInfo
-        semente = hashCodigo codigoAtivo (round intensidade * 1000)
-        gerador = mkStdGen semente
-        (variacaoChoque, _) = randomR (-intensidade, intensidade) gerador
-        novoPreco = max 0.01 (precoAtual ativoInfo * (1.0 + variacaoChoque))
-    in ativoInfo { 
-        precoAtual = novoPreco,
-        ultimaAtualizacao = tempoAtual 
-    }

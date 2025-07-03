@@ -186,26 +186,8 @@ menuLogado clienteLogado estado = do
             salvarEstado estadoAtualizado
             menuLogado clienteLogado estadoAtualizado
 
-        "7" -> do
-            putStr "Digite a intensidade do choque (0.1 = 10%, 0.5 = 50%): "
-            hFlush stdout
-            intensidadeStr <- getLine
-            let intensidade = read intensidadeStr :: Double
-            agora <- getCurrentTime
-            case simuladorPrecos estado of
-                Nothing -> do
-                    putStrLn "Simulador não inicializado!"
-                    menuLogado clienteLogado estado
-                Just simSerial -> do
-                    let sim = deSerializavel simSerial
-                        simComChoque = aplicarChoqueMercado intensidade agora sim
-                        estadoAtualizado = estado { simuladorPrecos = Just (paraSerializavel simComChoque) }
-                    putStrLn ">> Choque de mercado aplicado!"
-                    putStrLn $ consultarMercado estadoAtualizado
-                    salvarEstado estadoAtualizado
-                    menuLogado clienteLogado estadoAtualizado
 
-        "8" -> do
+        "7" -> do
             putStrLn "\n>> Fazendo logout..."
             inicio estado
 
