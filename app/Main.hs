@@ -92,6 +92,8 @@ fazerLogin estado = do
                 Just clienteLogado -> do
                     putStrLn  $ "Bem-vindo(a), " ++ nomeCliente clienteLogado ++ "!" -- $ subistitui os ()
 
+                    menuLogado clienteLogado estado
+
 
 
 
@@ -132,9 +134,10 @@ menuLogado clienteLogado estado = do
     putStrLn "3. Vender Ativo"
     putStrLn "4. Ver Posição da Carteira"
     putStrLn "5. Ver Extrato de Transações"
-    putStrLn "6. Atualizar Preços Manualmente"
-    putStrLn "7. Simular Choque de Mercado"
-    putStrLn "8. Logout (Sair da conta)"
+    putStrLn "6. Ver Relatório de Rendimento"
+    putStrLn "7. Atualizar Preços Manualmente"
+    putStrLn "8. Simular Choque de Mercado"
+    putStrLn "9. Logout (Sair da conta)"
     putStr "Escolha uma opção: "
     hFlush stdout
 
@@ -188,6 +191,11 @@ menuLogado clienteLogado estado = do
             menuLogado clienteLogado estado
 
         "6" -> do
+            putStrLn ""
+            putStrLn $ calcularRendimento cid estado
+            menuLogado clienteLogado estado
+
+        "7" -> do
             putStrLn ">> Atualizando preços..."
             agora <- getCurrentTime
             let estadoAtualizado = atualizarPrecosNoBanco agora estado
@@ -196,7 +204,7 @@ menuLogado clienteLogado estado = do
             salvarEstado estadoAtualizado
             menuLogado clienteLogado estadoAtualizado
 
-        "7" -> do
+        "8" -> do
             putStr "Digite a intensidade do choque (0.1 = 10%, 0.5 = 50%): "
             hFlush stdout
             intensidadeStr <- getLine
@@ -215,7 +223,7 @@ menuLogado clienteLogado estado = do
                     salvarEstado estadoAtualizado
                     menuLogado clienteLogado estadoAtualizado
 
-        "8" -> do
+        "9" -> do
             putStrLn "\n>> Fazendo logout..."
             inicio estado
 
@@ -242,7 +250,8 @@ cadastrarNovoCliente estado = do
     hFlush stdout
     valorStr <- getLine
     let valor = read valorStr :: Double
-    let novoEstado = abrirContaInvestimento nome senha pergunta resposta valor estado
+    agora <- getCurrentTime
+    let novoEstado = abrirContaInvestimento nome senha pergunta resposta valor agora estado
     let novoID = proximoIDCliente estado
     putStrLn $ "\n>> Conta criada com sucesso! Seu ID de Cliente é: " ++ show novoID ++ ". Guarde este número!"
     salvarEstado novoEstado

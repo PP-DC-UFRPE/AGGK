@@ -12,6 +12,7 @@ import Data.Map (Map)
 type IdCliente = Int
 type CodigoAtivo = String
 
+
 -- Cliente do banco
 data Cliente = Cliente {
     clienteID :: IdCliente,
@@ -46,7 +47,7 @@ data Carteira = Carteira {
 } deriving (Show, Generic)
 
 -- Tipo da transação realizada
-data TipoTransacao = Compra | Venda deriving (Show, Generic)
+data TipoTransacao = Compra | Deposito |Venda deriving (Show, Generic, Eq)
 
 -- Registro de uma operação feita
 data RegistroTransacao = RegistroTransacao {

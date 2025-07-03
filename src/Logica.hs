@@ -80,20 +80,64 @@ verificarRespostaSeguranca cid respostaUsuario estado =
     Just cliente -> if respostaPerguntaPessoal cliente == respostaUsuario then Just (senha cliente) else Nothing
 
 -- Cria um novo cliente com conta e carteira associadas
-abrirContaInvestimento :: String -> String -> String -> String -> Double -> EstadoBanco -> EstadoBanco
-abrirContaInvestimento nome senhaLogin pergunta resposta depositoInicial estadoAntigo = novoEstado
+abrirContaInvestimento :: String -> String -> String -> String -> Double -> UTCTime -> EstadoBanco -> EstadoBanco
+abrirContaInvestimento nome senhaLogin pergunta resposta depositoInicial agora estadoAntigo = novoEstado
   where
     novoID = proximoIDCliente estadoAntigo
     novoCliente = Cliente { clienteID = novoID, nomeCliente = nome, senha = senhaLogin, perguntaPessoalSenha = pergunta, respostaPerguntaPessoal = resposta }
     novaConta = Conta { idClienteConta = novoID, saldo = depositoInicial }
     novaCarteira = Carteira { idClienteCarteira = novoID, itens = [] }
 
+    transacaoDeposito = RegistroTransacao novoID Deposito "CAPITAL" 1 depositoInicial agora
+
     novoEstado = estadoAntigo {
         clientes = novoCliente : clientes estadoAntigo,
         contas = novaConta : contas estadoAntigo,
         carteiras = novaCarteira : carteiras estadoAntigo,
+        historico = transacaoDeposito : historico estadoAntigo,
         proximoIDCliente = novoID + 1
     }
+
+-- Função para calcular o valor de mercado total dos ativos na carteira
+calcularValorDeMercado :: Carteira -> EstadoBanco -> Double
+calcularValorDeMercado carteira estado = sum [ fromIntegral (quantidade item) * fromMaybe 0.0 (obterPreco (codigo (ativo item)) estado) | item <- itens carteira ]
+
+-- Calculo do rendimento total da conta 
+calcularRendimento :: IdCliente -> EstadoBanco -> String
+calcularRendimento cid estado = 
+  case (buscarContaPorID cid (contas estado), buscarCarteiraPorID cid (carteiras estado)) of
+    (Just conta, Just carteira) ->
+      let
+        -- Calcula o valor total da conta
+        valorAtivos = calcularValorDeMercado carteira estado
+        saldoAtual = saldo conta
+        valorTotalAtual = valorAtivos + saldoAtual
+
+        -- Soma de todos os depósitos
+        transacoesCliente = filter (\t -> idClienteTransacao t == cid) (historico estado)
+        depositos = filter (\t -> tipoTransacao t == Deposito) transacoesCliente
+        capitalAportado = sum [ precoUnitario t | t <- depositos ]
+
+      in if capitalAportado == 0
+        then "Nenhum depósito encontrado para calcular o rendimento."
+        else
+          let
+            -- Calcula o lucro/prejuízo e o rendimento percentual
+            lucroPrejuizo = valorTotalAtual - capitalAportado
+            rendimentoPercentual = (lucroPrejuizo / capitalAportado) * 100
+          in
+            unlines[
+              "--- Relatório de Rendimento ---",
+              "Capital Total Aportado: R$ " ++ show capitalAportado,
+              "Valor de Mercado dos Ativos: R$ " ++ show valorAtivos,
+              "Saldo em Conta: R$ " ++ show saldoAtual,
+              "---------------------------------",
+              "Valor Total Atual da Conta: R$ " ++ show valorTotalAtual,
+              "Lucro/Prejuízo Total: R$ " ++ show lucroPrejuizo,
+              "Rendimento Percentual: " ++ show (round rendimentoPercentual) ++ "%"
+            ]
+    _ -> "Conta ou carteira do cliente não encontrada."    
+
 
 -- Processa uma ordem de compra de ativo
 executarOrdemDeCompra :: IdCliente -> CodigoAtivo -> Int -> UTCTime -> EstadoBanco -> (EstadoBanco, String)
