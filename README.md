@@ -41,7 +41,7 @@ O sistema implementa as seguintes funcionalidades, simulando as operações de u
     * **Regra:** Permite a visualização do saldo atual em dinheiro e a lista de todos os ativos sob custódia, com suas respectivas quantidades, na carteira de um cliente.
 
 * **Persistência de Dados:**
-    * **Regra:** Ao iniciar o sistema, todos os dados dos clientes e de suas contas de investimento são recuperados de um arquivo local (`investment_bank_data.json`).
+    * **Regra:** Ao iniciar o sistema, todos os dados dos clientes e de suas contas de investimento são recuperados de um arquivo local (`banco_dados.json`).
     * **Regra:** A cada operação que altera os dados (compra, venda, cadastro), o estado completo do sistema é salvo novamente no arquivo, garantindo a consistência e persistência das informações.
 
 * **Extrato de Transações:**
