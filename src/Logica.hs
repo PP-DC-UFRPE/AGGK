@@ -19,7 +19,7 @@ ativosDisponiveis = [
     Ativo "ITUB4" "Itaú Unibanco PN"
     ]
 
--- Preços fixos para os ativos
+-- Preços padrão para os ativos
 precosDeMercado :: [(CodigoAtivo, Double)]
 precosDeMercado = [("PETR4", 15.75), ("VALE3", 45.50), ("MGLU3", 2.50), ("ITUB4", 30.10)]
 
