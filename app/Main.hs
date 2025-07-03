@@ -9,6 +9,7 @@ import Data.Aeson
 import Control.Exception (catch, IOException)
 import Data.Time (getCurrentTime)
 import Data.Time.LocalTime (getCurrentTimeZone)
+import Text.Read (readMaybe)
 
 arquivoBanco :: FilePath
 arquivoBanco = "banco_dados.json"
@@ -73,18 +74,29 @@ fazerLogin estado = do
     putStr "Digite seu ID de Cliente: "
     hFlush stdout
     idStr <- getLine
-    putStr "Digite sua senha: "
-    hFlush stdout
-    senha <- getLine
-    let cid = read idStr :: IdCliente
 
-    case loginCliente cid senha estado of
+    -- readMaybe é uma versão do read que retorna Nothing caso a conversão falhe.
+    case readMaybe idStr :: Maybe IdCliente of 
         Nothing -> do
-            putStrLn "\n>> ID ou senha inválidos. Tente novamente."
+            putStrLn "\n Falha ao logar: o ID do Cliente tem que ser um número"
             inicio estado
-        Just clienteLogado -> do
-            putStrLn $ "\n>> Bem-vindo(a), " ++ nomeCliente clienteLogado ++ "!"
-            menuLogado clienteLogado estado
+        Just cid -> do
+            putStr "Digite sua senha: "
+            hFlush stdout
+            senha <- getLine
+
+            case loginCliente cid senha estado of
+                Nothing -> do
+                    putStr "\n ID ou senha incorreto."
+                    inicio estado
+                Just clienteLogado -> do
+                    putStrLn  $ "Bem-vindo(a), " ++ nomeCliente clienteLogado ++ "!" -- $ subistitui os ()
+
+                    menuLogado clienteLogado estado
+
+
+
+
 
 -- Processo de Recuperação de Senha
 recuperarSenha :: EstadoBanco -> IO ()
@@ -122,9 +134,10 @@ menuLogado clienteLogado estado = do
     putStrLn "3. Vender Ativo"
     putStrLn "4. Ver Posição da Carteira"
     putStrLn "5. Ver Extrato de Transações"
-    putStrLn "6. Atualizar Preços Manualmente"
-    putStrLn "7. Simular Choque de Mercado"
-    putStrLn "8. Logout (Sair da conta)"
+    putStrLn "6. Ver Relatório de Rendimento"
+    putStrLn "7. Atualizar Preços Manualmente"
+    putStrLn "8. Simular Choque de Mercado"
+    putStrLn "9. Logout (Sair da conta)"
     putStr "Escolha uma opção: "
     hFlush stdout
 
@@ -178,6 +191,11 @@ menuLogado clienteLogado estado = do
             menuLogado clienteLogado estado
 
         "6" -> do
+            putStrLn ""
+            putStrLn $ calcularRendimento cid estado
+            menuLogado clienteLogado estado
+
+        "7" -> do
             putStrLn ">> Atualizando preços..."
             agora <- getCurrentTime
             let estadoAtualizado = atualizarPrecosNoBanco agora estado
@@ -186,8 +204,31 @@ menuLogado clienteLogado estado = do
             salvarEstado estadoAtualizado
             menuLogado clienteLogado estadoAtualizado
 
+<<<<<<< HEAD
 
         "7" -> do
+=======
+        "8" -> do
+            putStr "Digite a intensidade do choque (0.1 = 10%, 0.5 = 50%): "
+            hFlush stdout
+            intensidadeStr <- getLine
+            let intensidade = read intensidadeStr :: Double
+            agora <- getCurrentTime
+            case simuladorPrecos estado of
+                Nothing -> do
+                    putStrLn "Simulador não inicializado!"
+                    menuLogado clienteLogado estado
+                Just simSerial -> do
+                    let sim = deSerializavel simSerial
+                        simComChoque = aplicarChoqueMercado intensidade agora sim
+                        estadoAtualizado = estado { simuladorPrecos = Just (paraSerializavel simComChoque) }
+                    putStrLn ">> Choque de mercado aplicado!"
+                    putStrLn $ consultarMercado estadoAtualizado
+                    salvarEstado estadoAtualizado
+                    menuLogado clienteLogado estadoAtualizado
+
+        "9" -> do
+>>>>>>> 187dd69175ea365deabeb40ece4ccc8551a7d1bd
             putStrLn "\n>> Fazendo logout..."
             inicio estado
 
@@ -214,7 +255,8 @@ cadastrarNovoCliente estado = do
     hFlush stdout
     valorStr <- getLine
     let valor = read valorStr :: Double
-    let novoEstado = abrirContaInvestimento nome senha pergunta resposta valor estado
+    agora <- getCurrentTime
+    let novoEstado = abrirContaInvestimento nome senha pergunta resposta valor agora estado
     let novoID = proximoIDCliente estado
     putStrLn $ "\n>> Conta criada com sucesso! Seu ID de Cliente é: " ++ show novoID ++ ". Guarde este número!"
     salvarEstado novoEstado
