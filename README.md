@@ -109,7 +109,8 @@ build-depends:    base ^>=4.12.0.0
 
 ● Prompts: 
 
-" *Modelagem de Dados:
+" 
+**Modelagem de Dados:**
 
 Cliente: ID único e nome.
 
@@ -120,7 +121,7 @@ Ativo Financeiro: Ex: Ação → código (ticker) e nome.
 Carteira: Saldo + ativos com quantidades.
 
 
- *Funcionalidades Básicas:
+**Funcionalidades Básicas:**
 
 1. Cadastro de Cliente e Conta
 → Cria cliente + conta com depósito inicial.
@@ -138,12 +139,12 @@ Carteira: Saldo + ativos com quantidades.
 → Mostra saldo + ativos e quantidades.
 
 
-*Persistência de Dados:
+**Persistência de Dados:**
 
 Salvar/carregar dados em arquivo 
 
 
-*Histórico de Transações:
+**Histórico de Transações:**
 
 Tipo Transacao: quem, o quê, quanto, preço, data/hora.
 
@@ -152,17 +153,10 @@ Log de todas as operações.
 Função para consultar extrato.
 
 
- *Interface CLI 
+ **Interface CLI** 
 
 Menu interativo:
 1-Comprar, 2-Vender, 3-Ver Carteira, 4-Extrato, etc
-
-
- *Cálculo de Performance:
-
-Valor total da carteira = saldo + valor atual dos ativos.
-
-Lucro/Prejuízo = valor atual − total investido.
 
 Baseado nessas funcionalidades, dizer como posso aplicá-las e os requisitos básicos para implementá-las(bibliotecas e recursos externos)"
 
@@ -173,7 +167,7 @@ Baseado nessas funcionalidades, dizer como posso aplicá-las e os requisitos bá
 * "Explicar toda a estrutura dos módulos, do cabal e das funções básicas detalhadamente"
 
 
-* "Gerar função de extrato e menu interativo no Main"
+* "Gerar função de extrato e menus interativos no Main(um para login, contendo "criar conta", "entrar" e "recuperer senha", e um para o cliente logado, contendo as operações que podem ser realizadas por ele)
 
 
 * "Explicar código das função extrato e menu interativo detalhadamente"
