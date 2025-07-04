@@ -1,9 +1,5 @@
 # AGGK Investimentos
 
-## Descrição:
-
-**AGGK Investimentos** é um projeto de banco de investimentos, que será desenvolvido na linguagem de programação Haskell.
-
 ## Membros da Equipe:
 * Álvaro Ribeiro;
 * Gabriel Felipe;
@@ -12,7 +8,7 @@
 
 ## Descrição
 
-Este projeto é uma simulação da plataforma de investimentos de um banco digital, desenvolvida em Haskell. O objetivo é criar um sistema que gerencia clientes, contas de investimento, negociação de ativos financeiros e histórico de transações. O programa oferece uma interface de linha de comando (CLI) para interação do usuário e persiste os dados em um arquivo local JSON para manter o estado do sistema entre as execuções.
+Este projeto é uma simulação da plataforma de investimentos de um banco digital, desenvolvida em Haskell. O objetivo é criar um sistema que gerencia clientes, contas de investimento, negociação de ativos financeiros e histórico de transações. O programa oferece uma interface de linha de comando (CLI) para interação do usuário e persiste os dados em um arquivo local JSON para manter o estado do sistema entre as execuções. Além disso, conta com simulação dinâmica, a fim de aprimorar a experiência do usuário.
 
 
 ### Funcionalidades e Regras de Negócio
