@@ -49,7 +49,7 @@ O sistema implementa as seguintes funcionalidades, simulando as operações de u
     * **Regra:** Há uma funcionalidade para consultar o extrato completo de transações de um cliente.
 
 * **Cálculo de Performance da Carteira:**
-    * **Regra:** O sistema pode calcular o valor total da carteira de um cliente (Patrimônio), que é a soma do saldo em dinheiro com o valor de mercado atual de todos os seus ativos em custódia.
+    * **Regra:** O sistema pode calcular o valor total da carteira de um cliente (Posição), que é a soma do saldo em dinheiro com o valor de mercado atual de todos os seus ativos em custódia.
     * **Regra:** O sistema pode calcular o lucro/prejuízo total da carteira.
 
 
@@ -58,14 +58,15 @@ O sistema implementa as seguintes funcionalidades, simulando as operações de u
 
 ### Pré-requisitos
 * GHC (Glasgow Haskell Compiler) e Cabal (ferramenta de build).
-    * A versão usada no desenvolvimento foi a GHC 8.6.5 com Cabal 2.4.1.0 (via Haskell Platform).
+    * A versão usada no desenvolvimento foi a GHC 4.18.3.0 com Cabal 3.4
 
 ### Dependências
 
 Este projeto utiliza a biblioteca `aeson` para manipulação de dados em formato JSON (persistência de arquivos).
 
-Para adicionar a dependência, inclua `aeson` na seção `build-depends` do seu arquivo `.cabal`. Exemplo:
+Para adicionar a dependência, inclua `aeson` na seção `build-depends` do seu arquivo `.cabal`. 
 
+Exemplo:
 cabal
 build-depends:    base ^>=4.12.0.0
                 , aeson
@@ -77,13 +78,94 @@ build-depends:    base ^>=4.12.0.0
 
 2.  **Navegue até a pasta do projeto** pelo terminal.
 
-3.  **Construa o projeto** (isso irá baixar e instalar as dependências):
+3.  **Construa o projeto**:
     bash
        cabal build
-   
-
 
 4.  **Execute o programa:**
     bash
        cabal run
-      
+
+
+### Uso de IA (consciente):
+
+● Modelo: ChatGPT
+
+● Percentual: 70%
+
+● Prompts: 
+
+" *Modelagem de Dados:
+
+Cliente: ID único e nome.
+
+Conta: Pertence a um cliente e tem saldo.
+
+Ativo Financeiro: Ex: Ação → código (ticker) e nome.
+
+Carteira: Saldo + ativos com quantidades.
+
+
+ *Funcionalidades Básicas:
+
+1. Cadastro de Cliente e Conta
+→ Cria cliente + conta com depósito inicial.
+
+
+2. Comprar Ativo 
+→ Verifica saldo, debita valor e adiciona ativo.
+
+
+3. Vender Ativo 
+→ Verifica se possui ativo e quantidade, remove da carteira e credita o valor.
+
+
+4. Consultar Carteira
+→ Mostra saldo + ativos e quantidades.
+
+
+*Persistência de Dados:
+
+Salvar/carregar dados em arquivo 
+
+
+*Histórico de Transações:
+
+Tipo Transacao: quem, o quê, quanto, preço, data/hora.
+
+Log de todas as operações.
+
+Função para consultar extrato.
+
+
+ *Interface CLI 
+
+Menu interativo:
+1-Comprar, 2-Vender, 3-Ver Carteira, 4-Extrato, etc
+
+
+ *Cálculo de Performance:
+
+Valor total da carteira = saldo + valor atual dos ativos.
+
+Lucro/Prejuízo = valor atual − total investido.
+
+Baseado nessas funcionalidades, dizer como posso aplicá-las e os requisitos básicos para implementá-las(bibliotecas e recursos externos)"
+
+
+* "Gerar módulos Tipos e Logica, cabal e funções básicas para Tipos e Logica"
+
+
+* "Explicar toda a estrutura dos módulos, do cabal e das funções básicas detalhadamente"
+
+
+* "Gerar função de extrato e menu interativo no Main"
+
+
+* "Explicar código das função extrato e menu interativo detalhadamente"
+
+
+* "Corrigir erros na implementação"
+
+
+* "Tirar dúvidas sobre implementação"  
