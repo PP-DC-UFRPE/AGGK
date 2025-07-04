@@ -97,7 +97,7 @@ build-depends:    base ^>=4.12.0.0
 
 ● Modelo: ChatGPT
 
-● Percentual: 70%
+● Percentual: 65%
 
 ● Prompts: 
 
