@@ -29,9 +29,9 @@ O sistema implementa as seguintes funcionalidades, simulando as operações de u
 
 * **Ordem de Compra de Ativo:**
     * **Regra:** O cliente deve possuir uma conta ativa no banco.
-    * **Regra:** A conta do cliente deve ter saldo em dinheiro suficiente para cobrir o custo total da ordem de compra (quantidade * preço do ativo).
+    * **Regra:** A conta do cliente deve ter saldo em dinheiro suficiente para cobrir o custo total da ordem de compra(quantidade * preço do ativo).
     * **Regra:** O ativo (ex: "PETR4") deve existir e estar disponível para negociação no mercado simulado.
-    * **Regra:** Ao executar a ordem, o valor é debitado do saldo da conta e o ativo (com sua quantidade) é adicionado ou atualizado na carteira de investimentos do cliente.
+    * **Regra:** Ao executar a ordem, o valor é debitado do saldo da conta e o ativo , com sua quantidade, é adicionado ou atualizado na carteira de investimentos do cliente.
 
 
 * **Ordem de Venda de Ativo:**
@@ -61,7 +61,7 @@ O sistema implementa as seguintes funcionalidades, simulando as operações de u
 
 * **Simulação de Mercado e Dinâmica de Preços:**
 
-    * **Regra**: No momento em que o sistema é iniciado, caso não haja um estado de simulação salvo, os ativos disponíveis para negociação ("PETR4", "VALE3", etc.) devem ser inicializados com um preço base pré-definido.
+    * **Regra**: No momento em que o sistema é iniciado, caso não haja um estado de simulação salvo, os ativos disponíveis para negociação ("PETR4", "VALE3", etc) devem ser inicializados com um preço padrão pré-definido.
     * **Regra**: O preço de cada ativo não é estático. Ele flutua ao longo do tempo para simular a volatilidade de um mercado real.
     * **Regra**: Cada ativo possui um fator de "instabilidade" (volatilidade) intrínseco. Ativos mais voláteis (ex: "MGLU3") têm potencial para variações de preço maiores em um mesmo intervalo de tempo em comparação com ativos mais estáveis (ex: "ITUB4").
     * **Regra**: A atualização dos preços dos ativos é acionada dinamicamente. Sempre que uma operação sensível ao preço é solicitada, como uma ordem de compra/venda ou a consulta do mercado, o sistema recalcula o preço do ativo com base no tempo decorrido desde a última atualização e em seu fator de instabilidade.
