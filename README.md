@@ -45,7 +45,7 @@ O sistema implementa as seguintes funcionalidades, simulando as operações de u
 
 
 * **Persistência de Dados:**
-    * **Regra:** Ao iniciar o sistema, todos os dados dos clientes e de suas contas de investimento são recuperados de um arquivo local (`banco_dados.json`).
+    * **Regra:** Ao iniciar o sistema, todos os dados dos clientes e de suas contas de investimento são recuperados de um arquivo local (banco_dados.json).
     * **Regra:** A cada operação que altera os dados (compra, venda, cadastro), o estado completo do sistema é salvo novamente no arquivo, garantindo a consistência e persistência das informações.
 
 
@@ -76,9 +76,9 @@ O sistema implementa as seguintes funcionalidades, simulando as operações de u
 
 ### Dependências
 
-Este projeto utiliza a biblioteca `aeson` para manipulação de dados em formato JSON (persistência de arquivos).
+Este projeto utiliza a biblioteca **aeson** para manipulação de dados em formato JSON (persistência de arquivos).
 
-Para adicionar a dependência, inclua `aeson` na seção `build-depends` do seu arquivo `.cabal`. 
+Para adicionar a dependência, inclua **aeson** na seção **build-depends** do seu arquivo **.cabal**. 
 
 Exemplo:
 cabal
